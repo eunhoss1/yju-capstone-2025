@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인터랙티브 Spring MVC 요청 처리 흐름</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Educational Tech Blue -->
+    <!-- Application Structure Plan: A central, interactive diagram forms the core of the application. A control panel with 'MPA'/'SPA' toggle buttons allows users to directly compare architectural differences. Key components of the diagram are clickable, revealing informational modals. This structure was chosen to transform a static, complex diagram into a hands-on, explorable learning tool, making abstract concepts tangible. -->
+    <!-- Visualization & Content Choices:
+    - Diagram: Goal: Visualize a complex server-side process. Method: HTML divs styled with Tailwind CSS to create a clean, modern flowchart. Interaction: Clickable components, animated pathways. Justification: Using HTML/CSS for the diagram allows for easy DOM manipulation, complex layouts with Tailwind, and straightforward event handling with JS, which is superior to a static canvas for this educational purpose.
+    - MPA/SPA Toggle: Goal: Compare two different architectural request flows. Method: JS-controlled buttons that dynamically add/remove CSS classes to show/hide relevant paths and info boxes. Interaction: User clicks to instantly switch views. Justification: Direct comparison is the most effective way to teach the differences between MPA and SPA rendering paths.
+    - Modals: Goal: Provide deep-dive information without cluttering the main view. Method: A single modal element whose content is dynamically updated by JS based on which component was clicked. Interaction: Click component to open, click overlay or button to close. Justification: Keeps the main diagram clean while offering layered information on demand.
+    - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
+        .flow-box { transition: all 0.3s ease; border: 2px solid transparent; }
+        .flow-box:hover { border-color: #3b82f6; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
+        .arrow { position: absolute; background-color: #6b7280; transition: all 0.5s ease-in-out; }
+        .arrow.animated { background-color: #ef4444; box-shadow: 0 0 8px #ef4444; }
+        .arrow.horizontal { height: 3px; }
+        .arrow.vertical { width: 3px; }
+        .arrow::after { content: ''; position: absolute; border: solid #6b7280; border-width: 0 3px 3px 0; display: inline-block; padding: 4px; transition: all 0.5s ease-in-out; }
+        .arrow.animated::after { border-color: #ef4444; }
+        .arrow.right::after { right: -5px; top: -5px; transform: rotate(-45deg); }
+        .arrow.left::after { left: -5px; top: -5px; transform: rotate(135deg); }
+        .arrow.down::after { bottom: -5px; left: -5px; transform: rotate(45deg); }
+        .arrow.up::after { top: -5px; left: -5px; transform: rotate(-135deg); }
+        .flow-path { transition: opacity 0.5s ease-in-out; }
+        .hidden-flow { opacity: 0.15 !important; }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 50;
+        }
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: white; padding: 2rem; border-radius: 0.75rem;
+            max-width: 500px; width: 90%;
+            transform: scale(0.95); transition: all 0.3s ease;
+        }
+        .modal-overlay.visible .modal-content { transform: scale(1); }
+        .control-btn.active { background-color: #2563eb; color: white; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4); }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Spring MVC 요청 처리 흐름 (v6)</h1>
+            <p class="text-gray-600 mt-2">최종 완성된 MPA와 SPA의 동작 방식을 비교해보세요.</p>
+        </header>
+
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+            <div class="flex flex-wrap justify-center items-center gap-4 mb-8">
+                <span class="font-semibold text-gray-700">동작 방식 선택:</span>
+                <div>
+                    <button id="mpa-btn" class="control-btn active px-6 py-2 rounded-full font-semibold bg-gray-200 text-gray-800 transition">MPA</button>
+                    <button id="spa-btn" class="control-btn px-6 py-2 rounded-full font-semibold bg-gray-200 text-gray-800 transition">SPA</button>
+                </div>
+                <button id="start-btn" class="px-6 py-2 rounded-full font-semibold bg-red-500 text-white hover:bg-red-600 transition shadow hover:shadow-lg">▶ 요청 시작</button>
+            </div>
+
+            <div id="diagram" class="relative h-[800px] w-full max-w-6xl mx-auto">
+                <!-- Components -->
+                <div id="client" class="flow-box absolute top-[380px] left-0 w-32 h-20 bg-gray-200 text-gray-900 rounded-lg flex items-center justify-center font-semibold shadow">Client</div>
+                
+                <div class="absolute top-0 left-48 bottom-0 right-[24rem] border-4 border-gray-800 rounded-2xl flex items-center justify-center">
+                    <span class="absolute top-2 right-4 font-bold text-2xl text-gray-800">WAS</span>
+                </div>
+
+                <div id="dispatcher" class="flow-box clickable absolute top-[370px] left-[240px] w-40 h-32 bg-blue-200 text-blue-900 rounded-lg flex items-center justify-center font-bold text-center shadow-lg cursor-pointer" data-title="Dispatcher Servlet" data-desc="모든 HTTP 요청을 받는 Front Controller. 요청을 분석하여 적절한 핸들러에게 전달하고, 핸들러가 반환한 결과를 받아 뷰를 렌더링하거나 응답을 생성하는 중앙 제어 허브 역할을 합니다.">디스패처<br>서블릿</div>
+                
+                <div id="handler-mapping" class="flow-box clickable absolute top-[65px] left-[450px] w-44 h-20 bg-green-200 text-green-900 rounded-lg flex items-center justify-center font-semibold text-center shadow cursor-pointer" data-title="HandlerMapping" data-desc="요청 정보를 바탕으로, 이 요청을 처리할 적절한 핸들러(컨트롤러의 메서드)를 찾아주는 역할을 합니다.">핸들러 매핑</div>
+                <div id="handler-adapter" class="flow-box clickable absolute top-[175px] left-[450px] w-44 h-20 bg-green-200 text-green-900 rounded-lg flex items-center justify-center font-semibold text-center shadow cursor-pointer" data-title="HandlerAdapter" data-desc="DispatcherServlet과 컨트롤러 사이의 어댑터. 다양한 형태의 컨트롤러를 일관된 방식으로 호출할 수 있도록 변환 작업을 수행합니다.">핸들러 어댑터</div>
+                <div id="argument-resolver" class="flow-box clickable absolute top-[285px] left-[450px] w-44 h-20 bg-green-200 text-green-900 rounded-lg flex items-center justify-center font-semibold text-center shadow cursor-pointer" data-title="ArgumentResolver" data-desc="컨트롤러 메서드가 필요로 하는 파라미터를 HTTP 요청에서 추출하고 적절한 값으로 만들어 넘겨주는 역할을 합니다.">아규먼트 리졸버</div>
+                
+                <div id="controller" class="flow-box clickable absolute top-[370px] left-[450px] w-44 h-32 bg-yellow-200 text-yellow-900 rounded-lg flex items-center justify-center font-bold text-center shadow-lg cursor-pointer" data-title="Controller (Handler)" data-desc="실질적인 비즈니스 로직을 처리하고, 그 결과를 반환합니다. 반환 값은 View의 이름(MPA)이거나 데이터 객체(SPA)일 수 있습니다.">컨트롤러<br>(핸들러)</div>
+                
+                <div id="return-value-handler" class="flow-box clickable absolute top-[525px] left-[450px] w-44 h-20 bg-orange-200 text-orange-900 rounded-lg flex items-center justify-center font-semibold text-center shadow cursor-pointer" data-title="ReturnValueHandler" data-desc="컨트롤러가 반환한 값을 처리합니다. 반환 값의 타입이나 애노테이션(@ResponseBody 등)을 보고, ViewResolver에게 위임할지(MPA), MessageConverter를 호출할지(SPA) 결정합니다.">리턴 밸류<br>핸들러</div>
+
+                <!-- MPA Path -->
+                <div id="mpa-flow" class="flow-path">
+                    <div id="view-resolver" class="flow-box clickable absolute top-[635px] left-[450px] w-44 h-20 bg-purple-200 text-purple-900 rounded-lg flex items-center justify-center font-semibold text-center shadow cursor-pointer" data-title="ViewResolver" data-desc="컨트롤러가 반환한 논리적인 View 이름을 실제 물리적인 View(템플릿 파일)로 변환해주는 역할을 합니다.">View Resolver</div>
+                    <div id="view" class="flow-box absolute top-[635px] left-[700px] w-44 h-20 bg-purple-200 text-purple-900 rounded-lg flex items-center justify-center font-semibold text-center shadow">View (Thymeleaf)<br>렌더링</div>
+                </div>
+
+                <!-- SPA Path -->
+                <div id="spa-flow" class="flow-path hidden-flow">
+                    <div id="message-converter" class="flow-box clickable absolute top-[525px] left-[700px] w-44 h-20 bg-teal-200 text-teal-900 rounded-lg flex items-center justify-center font-semibold text-center shadow cursor-pointer" data-title="MessageConverter" data-desc="컨트롤러가 반환한 자바 객체를 HTTP 응답 본문에 맞는 형태(주로 JSON)로 변환합니다. ReturnValueHandler에 의해 호출됩니다.">메시지 컨버터<br>(JSON 변환)</div>
+                    <div id="frontend" class="flow-box clickable absolute top-[525px] left-[920px] w-44 h-20 bg-cyan-200 text-cyan-900 rounded-lg flex items-center justify-center font-semibold text-center shadow cursor-pointer" data-title="Frontend Application" data-desc="Client 측의 JavaScript 애플리케이션(React 등). 백엔드로부터 받은 순수 데이터(JSON)를 사용하여 동적으로 HTML을 생성하고 사용자 인터페이스를 렌더링합니다.">프론트엔드<br>(JS Application)</div>
+                </div>
+                
+                <!-- Arrows -->
+                <div id="a-req-1" class="arrow horizontal right" style="top: 410px; left: 140px; width: 85px;"></div>
+                <div id="a-req-2" class="arrow" style="top: 155px; left: 420px; width: 30px; height: 225px; border-top-left-radius: 20px; border-left: 3px solid #6b7280; border-top: 3px solid #6b7280;"></div>
+                <div id="a-req-3" class="arrow vertical down" style="top: 145px; left: 540px; height: 20px;"></div>
+                <div id="a-req-4" class="arrow" style="top: 155px; left: 420px; width: 30px; height: 50px; border-bottom-right-radius: 20px; border-right: 3px solid #6b7280; border-bottom: 3px solid #6b7280;"></div>
+                <div id="a-req-5" class="arrow vertical down" style="top: 255px; left: 540px; height: 20px;"></div>
+                <div id="a-req-6" class="arrow vertical down" style="top: 365px; left: 540px; height: 5px;"></div>
+                <div id="a-req-7" class="arrow vertical down" style="top: 480px; left: 540px; height: 35px;"></div>
+                
+                <!-- Return Path Arrows -->
+                <div id="a-ret-1" class="arrow vertical down mpa-flow" style="top: 605px; left: 540px; height: 20px;"></div>
+                
+                <!-- MPA Response Path -->
+                <div id="mpa-arrow-1" class="arrow horizontal right mpa-flow" style="top: 705px; left: 605px; width: 80px;"></div>
+                <div id="mpa-arrow-2" class="arrow vertical up mpa-flow" style="top: 430px; left: 788px; height: 205px;"></div>
+                <div id="mpa-arrow-3" class="arrow horizontal left mpa-flow" style="top: 430px; left: 140px; width: 648px;"></div>
+                
+                <!-- SPA Response Path -->
+                <div id="spa-arrow-1" class="arrow horizontal right spa-flow hidden-flow" style="top: 555px; left: 605px; width: 80px;"></div>
+                <div id="spa-arrow-2" class="arrow horizontal right spa-flow hidden-flow" style="top: 555px; left: 855px; width: 50px;"></div>
+                <div id="spa-arrow-3" class="arrow vertical up spa-flow hidden-flow" style="top: 430px; left: 1008px; height: 95px;"></div>
+                <div id="spa-arrow-4" class="arrow horizontal left spa-flow hidden-flow" style="top: 430px; left: 140px; width: 868px;"></div>
+            </div>
+            
+            <div id="info-panel" class="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <p id="info-text" class="text-center text-gray-700 font-medium"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modal-title" class="text-2xl font-bold mb-4"></h3>
+            <p id="modal-desc" class="text-gray-600"></p>
+            <button id="modal-close" class="mt-6 w-full bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition">닫기</button>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const mpaBtn = document.getElementById('mpa-btn');
+    const spaBtn = document.getElementById('spa-btn');
+    const startBtn = document.getElementById('start-btn');
+    const infoText = document.getElementById('info-text');
+    const mpaFlow = document.getElementById('mpa-flow');
+    const spaFlow = document.getElementById('spa-flow');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalDesc = document.getElementById('modal-desc');
+    const modalClose = document.getElementById('modal-close');
+    
+    let currentMode = 'MPA';
+    let animationRunning = false;
+
+    function setMode(mode) {
+        currentMode = mode;
+        if (mode === 'MPA') {
+            mpaBtn.classList.add('active');
+            spaBtn.classList.remove('active');
+            mpaFlow.classList.remove('hidden-flow');
+            spaFlow.classList.add('hidden-flow');
+            infoText.innerHTML = `<strong>MPA 방식:</strong> ReturnValueHandler가 ViewResolver를 호출하고, ViewResolver는 템플릿을 찾아 렌더링합니다. 완성된 HTML 페이지가 Client에게 직접 응답으로 전달됩니다.`;
+        } else { // SPA
+            spaBtn.classList.add('active');
+            mpaBtn.classList.remove('active');
+            spaFlow.classList.remove('hidden-flow');
+            mpaFlow.classList.add('hidden-flow');
+            infoText.innerHTML = `<strong>SPA 방식:</strong> ReturnValueHandler가 MessageConverter를 직접 호출하여 객체를 JSON으로 변환합니다. 이 데이터가 Client의 Frontend Application으로 전달되어 동적으로 화면을 구성합니다.`;
+        }
+    }
+
+    mpaBtn.addEventListener('click', () => setMode('MPA'));
+    spaBtn.addEventListener('click', () => setMode('SPA'));
+
+    startBtn.addEventListener('click', () => {
+        if (animationRunning) return;
+        animationRunning = true;
+        
+        const allElements = document.querySelectorAll('.flow-box, .arrow');
+        allElements.forEach(el => el.classList.remove('animated'));
+        
+        const requestSequence = [
+            'a-req-1', 'dispatcher', 'a-req-2', 'handler-mapping', 'a-req-3', 'a-req-4',
+            'a-req-5', 'handler-adapter', 'a-req-6', 'argument-resolver', 'a-req-7', 'controller'
+        ];
+        
+        let delay = 0;
+        requestSequence.forEach(id => {
+            setTimeout(() => { document.getElementById(id)?.classList.add('animated'); }, delay);
+            delay += 200;
+        });
+
+        setTimeout(() => {
+            document.getElementById('return-value-handler')?.classList.add('animated');
+            setTimeout(() => {
+                let returnDelay = 200;
+                if (currentMode === 'MPA') {
+                    const mpaReturnSeq = ['a-ret-1', 'view-resolver', 'mpa-arrow-1', 'view', 'mpa-arrow-2', 'mpa-arrow-3'];
+                    mpaReturnSeq.forEach(id => {
+                         setTimeout(() => { document.querySelectorAll('#' + id + ', .' + id).forEach(e => e.classList.add('animated')) }, returnDelay);
+                         returnDelay += 200;
+                    });
+                } else { // SPA
+                    const spaReturnSeq = ['spa-arrow-1', 'message-converter', 'spa-arrow-2', 'frontend', 'spa-arrow-3', 'spa-arrow-4'];
+                     spaReturnSeq.forEach(id => {
+                         setTimeout(() => { document.querySelectorAll('#' + id + ', .' + id).forEach(e => e.classList.add('animated')) }, returnDelay);
+                         returnDelay += 200;
+                    });
+                }
+
+                setTimeout(() => { animationRunning = false; }, returnDelay + 200);
+
+            }, 200);
+        }, delay);
+    });
+
+    document.querySelectorAll('.clickable').forEach(el => {
+        el.addEventListener('click', () => {
+            modalTitle.textContent = el.dataset.title;
+            modalDesc.textContent = el.dataset.desc;
+            modal.classList.add('visible');
+        });
+    });
+
+    modalClose.addEventListener('click', () => modal.classList.remove('visible'));
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('visible');
+        }
+    });
+
+    setMode('MPA'); // Initial state
+});
+</script>
+</body>
+</html>
+
