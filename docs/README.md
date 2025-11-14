@@ -3,7 +3,7 @@
 GitHub Pages 배포 링크:
 
 - [🚀 Spring MVC (MPA) & REST API (SPA 구조) Flow](https://eunhoss1.github.io/yju-capstone-2025/mvc-rest-flow.html)
-웹시스템 설계 프로젝트 시각화(https://eunhoss1.github.io/yju-capstone-2025/websystem.html)
+- 웹시스템 설계 프로젝트 시각화(https://eunhoss1.github.io/yju-capstone-2025/websystem.html)
 - [문제해결능력](https://github.com/user-attachments/files/23180788/default.html)
 
 ---
