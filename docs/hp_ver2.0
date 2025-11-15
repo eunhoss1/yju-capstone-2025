@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logi-Optimus | AI 배송-적재 E2E 최적화 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: 차분한 전문가용 팔레트 (White/Slate/Blue/Teal) -->
+    <!-- Application Structure Plan: 주제별, 하향식 SPA 구조. Hero(What) → 현장의 문제(Why) → 우리의 해결책(How) → 벤치마킹 차트(Data Proof) → 작동 방식(Process) → 타겟 유저(Who) → UI 비전(Vision). 이 스토리텔링 구조는 보고서의 목차를 따르는 것보다 교수/이해관계자에게 더 설득력 있고 사용자 친화적임. -->
+    <!-- Visualization & Content Choices: 1. 벤치마킹(보고서 2.2) -> 목표: 비교 -> 시각화: 그룹형 막대 차트(Chart.js) -> 상호작용: 툴팁 -> 근거: 4개 유형의 솔루션을 다각도로 비교하여 우리의 고유한 시장 위치(LIFO + 현실 제약 + 접근성)를 즉시 시각적으로 증명. 2. 데이터 흐름(보고서 4.2.A) -> 목표: 프로세스 설명 -> 시각화: HTML/Tailwind 단계별 다이어그램(카드+유니코드 화살표) -> 근거: SVG/Mermaid 없이 CSS만으로 핵심 E2E 로직을 명확하게 시각화. 3. AI 로직(보고서 4.2.B) -> 목표: 정리 -> 시각화: HTML/CSS 카드 그리드 -> 근거: AI의 복잡한 룰을 4개의 명확한 기능 카드로 분해하여 제시. 4. 페르소나(보고서 3) -> 목표: 정리 -> 시각화: Javascript 탭 인터페이스 -> 상호작용: 클릭 전환 -> 근거: 깔끔한 UI로 한 번에 한 프로필에 집중. 5. UI 비전(보고서 4.2.C) -> 목표: 정보 -> 시각화: HTML/CSS 와이어프레임 스케치 -> 근거: SVG 없이 순수 CSS로 최종 UI 레이아웃을 시각적으로 스케치. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 450px;
+            max-height: 500px;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 550px;
+            }
+        }
+        .tab-active {
+            border-bottom: 2px solid #2563eb;
+            color: #2563eb;
+            font-weight: 700;
+        }
+        .tab-inactive {
+            color: #64748b;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex-shrink-0">
+                    <a href="#home" class="text-2xl font-bold text-blue-800">Logi-Optimus</a>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#problem" class="text-slate-600 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium">현장의 문제</a>
+                        <a href="#solution" class="text-slate-600 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium">우리의 해결책</a>
+                        <a href="#how-it-works" class="text-slate-600 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium">작동 방식</a>
+                        <a href="#users" class="text-slate-600 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium">타겟 유저</a>
+                        <a href="#vision" class="text-slate-600 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium">UI 비전</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-slate-600 hover:text-blue-700 p-2 rounded-md">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white shadow-lg">
+            <a href="#problem" class="mobile-menu-link block text-slate-600 hover:text-blue-700 px-4 py-3 text-base font-medium border-t border-slate-200">현장의 문제</a>
+            <a href="#solution" class="mobile-menu-link block text-slate-600 hover:text-blue-700 px-4 py-3 text-base font-medium border-t border-slate-200">우리의 해결책</a>
+            <a href="#how-it-works" class="mobile-menu-link block text-slate-600 hover:text-blue-700 px-4 py-3 text-base font-medium border-t border-slate-200">작동 방식</a>
+            <a href="#users" class="mobile-menu-link block text-slate-600 hover:text-blue-700 px-4 py-3 text-base font-medium border-t border-slate-200">타겟 유저</a>
+            <a href="#vision" class="mobile-menu-link block text-slate-600 hover:text-blue-700 px-4 py-3 text-base font-medium border-t border-slate-200">UI 비전</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Section 1: Hero (Home) -->
+        <section id="home" class="bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 text-center">
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-blue-900 tracking-tight">
+                    AI 기반 배송-적재 E2E 최적화 시스템
+                </h1>
+                <p class="mt-6 text-xl text-slate-700 max-w-3xl mx-auto">
+                    Logi-Optimus는 배송 기사와 물류 관리자를 위한 웹 기반 솔루션입니다. AI가 최적의 배송 경로와 트럭 적재 순서를 동시에 계산하여, 경험에 의존하던 물류 현장의 비효율을 데이터 기반으로 해결합니다.
+                </p>
+                <div class="mt-10">
+                    <a href="#solution" class="px-8 py-3 bg-blue-700 text-white font-bold rounded-lg shadow-lg hover:bg-blue-800 transition duration-300">
+                        우리의 해결책 보기
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: The Problem -->
+        <section id="problem" class="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+            <div class="text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-blue-900">물류 현장의 '끊어진 연결고리'</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">
+                    현재 물류 현장에서는 '경로'와 '적재'가 분리되어 있습니다. TMAP 같은 툴이 최적 경로를 알려줘도, 물건을 싣는 것은 여전히 기사의 경험에 의존합니다. 이는 비효율과 실수로 직결됩니다.
+                </p>
+            </div>
+
+            <div class="mt-16 grid md:grid-cols-3 gap-8 items-center text-center">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <div class="text-5xl">🚚</div>
+                    <h3 class="mt-4 text-xl font-bold text-slate-800">1. 경로 최적화 (시스템)</h3>
+                    <p class="mt-2 text-slate-600">지도 API가 최적의 배송 순서(TSP)를 계산합니다. (예: A → C → B)</p>
+                </div>
+
+                <div class="flex justify-center text-5xl font-bold text-red-500 my-8 md:my-0">
+                    <span class="hidden md:block">→</span>
+                    <span class="md:hidden">↓</span>
+                    <span class="animate-pulse mx-2 text-red-600">?</span>
+                    <span class="md:hidden">↓</span>
+                    <span class="hidden md:block">→</span>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-lg border-2 border-red-400">
+                    <div class="text-5xl">🧠</div>
+                    <h3 class="mt-4 text-xl font-bold text-slate-800">2. 수동 적재 (기사 경험)</h3>
+                    <p class="mt-2 text-slate-600">
+                        <span class="font-bold text-red-600">"B가 마지막인데... 어디 있지?"</span><br>
+                        경로의 역순(B→C→A)으로 싣는 것을 기사가 직접 머릿속으로 계산해야 합니다.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="mt-12 grid md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-bold text-blue-800">Pain Point 1: 파손 및 시간 낭비</h4>
+                    <p class="mt-2 text-slate-600">적재 순서가 꼬이면, 먼저 내릴 물건을 찾기 위해 트럭 내부를 뒤져야 합니다. (시간 낭비) 또한, 무거운 물건을 가벼운 물건 위에 쌓아 파손이 발생합니다. (비용 발생)</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-bold text-blue-800">Pain Point 2: 신입/베테랑 격차</h4>
+                    <p class="mt-2 text-slate-600">배송 품질이 기사의 숙련도에 따라 크게 좌우됩니다. 신입 기사는 비효율적인 동선과 적재 실수로 CS를 유발하고, 이는 관리자의 운영 부담으로 이어집니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Our Solution (with Chart) -->
+        <section id="solution" class="bg-white py-16 sm:py-20">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-blue-900">우리의 해결책: '끊어진 고리'를 AI로 연결</h2>
+                    <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">
+                        Logi-Optimus는 이 '틈새 시장'을 공략합니다. API로 경로를 계산하는 즉시, 'LIFO'와 '현실 제약'을 반영한 3D 적재 가이드를 경량 웹(Web)으로 제공합니다.
+                    </p>
+                </div>
+
+                <div class="mt-16">
+                    <h3 class="text-2xl font-bold text-center text-slate-800 mb-6">경쟁 솔루션과의 차별점 (데이터: 보고서 2.2)</h3>
+                    <p class="text-center text-slate-600 mb-8 max-w-3xl mx-auto">
+                        아래 차트는 Logi-Optimus가 'LIFO 연동', '현실 제약', '접근성'이라는 핵심 영역에서 어떻게 기존 솔루션들을 압도하는지 보여줍니다.
+                    </p>
+                    <div class="bg-white p-4 rounded-lg shadow-xl">
+                        <div class="chart-container">
+                            <canvas id="benchmarkChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: How It Works -->
+        <section id="how-it-works" class="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+            <div class="text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-blue-900">시스템 작동 방식 (데이터: 보고서 4.2)</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">
+                    사용자는 데이터만 업로드하면, Logi-Optimus가 4단계의 E2E 프로세스를 통해 최종 결과물을 도출합니다.
+                </p>
+            </div>
+
+            <!-- Data Flow Diagram -->
+            <div class="mt-16 grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
+                <div class="flex flex-col items-center">
+                    <div class="bg-white p-6 rounded-lg shadow-lg w-full">
+                        <div class="flex items-center justify-center w-16 h-16 bg-blue-100 text-blue-700 rounded-full mx-auto text-2xl font-bold">1</div>
+                        <h3 class="mt-5 text-xl font-bold text-slate-800 flex items-center justify-center">Input (입력) <span class="hidden md:inline-block text-slate-400 text-4xl ml-4">→</span></h3>
+                        <p class="mt-2 text-slate-600 h-24">사용자가 '주소 목록(Excel)'과 '물품 리스트(무게, 크기)'를 웹에 업로드합니다.</p>
+                    </div>
+                    <div class="text-4xl text-slate-400 my-4 md:hidden">↓</div>
+                </div>
+                
+                <div class="flex flex-col items-center">
+                    <div class="bg-white p-6 rounded-lg shadow-lg w-full">
+                        <div class="flex items-center justify-center w-16 h-16 bg-blue-100 text-blue-700 rounded-full mx-auto text-2xl font-bold">2</div>
+                        <h3 class="mt-5 text-xl font-bold text-slate-800 flex items-center justify-center">Process 1 (경로) <span class="hidden md:inline-block text-teal-500 text-4xl ml-4">→</span></h3>
+                        <p class="mt-2 text-slate-600 h-24">지도 API(TMAP/Naver)가 최적의 배송 순서(TSP)를 계산합니다. (예: A → C → B)</p>
+                    </div>
+                    <div class="text-4xl text-slate-400 my-4 md:hidden">↓</div>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="bg-white p-6 rounded-lg shadow-lg w-full">
+                        <div class="flex items-center justify-center w-16 h-16 bg-teal-100 text-teal-700 rounded-full mx-auto text-2xl font-bold">3</div>
+                        <h3 class="mt-5 text-xl font-bold text-teal-800 flex items-center justify-center">Process 2 (적재) <span class="hidden md:inline-block text-slate-400 text-4xl ml-4">→</span></h3>
+                        <p class="mt-2 text-slate-600 h-24">경로(A→C→B)를 LIFO(B→C→A)로 변환, '핵심 AI 로직'을 적용하여 (x,y,z) 좌표를 계산합니다.</p>
+                    </div>
+                    <div class="text-4xl text-slate-400 my-4 md:hidden">↓</div>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="bg-white p-6 rounded-lg shadow-lg w-full">
+                        <div class="flex items-center justify-center w-16 h-16 bg-blue-100 text-blue-700 rounded-full mx-auto text-2xl font-bold">4</div>
+                        <h3 class="mt-5 text-xl font-bold text-slate-800">Output (출력)</h3>
+                        <p class="mt-2 text-slate-600 h-24">'2D 경로 지도'와 '3D 적재 가이드'를 사용자 웹 화면에 동시에 시각화합니다.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Arrows for desktop -->
+            <div class="hidden md:grid grid-cols-4 items-center -mt-32">
+            </div>
+
+            <!-- AI Logic Rules -->
+            <div class="mt-24 sm:mt-32">
+                <h3 class="text-2xl font-bold text-center text-teal-800 mb-6">'Process 2'의 핵심 AI 로직 (데이터: 보고서 4.2.B)</h3>
+                <p class="text-center text-slate-600 mb-8 max-w-3xl mx-auto">
+                    교수님 피드백을 반영, 단순 LIFO가 아닌 '현실 제약'을 반영한 다중 우선순위 알고리즘을 설계합니다.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="bg-white p-5 rounded-lg shadow-lg border-b-4 border-teal-600">
+                        <h4 class="text-lg font-bold text-teal-700">P0: 묶음 처리</h4>
+                        <p class="text-sm mt-1">동일 배송지(예: A아파트 101동, 102동) 물품은 하나의 그룹으로 묶습니다.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-lg shadow-lg border-b-4 border-teal-600">
+                        <h4 class="text-lg font-bold text-teal-700">P1: 무게/파손</h4>
+                        <p class="text-sm mt-1">무거운 것은 아래에, 파손주의는 위에 배치합니다. (LIFO보다 상위 규칙)</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-lg shadow-lg border-b-4 border-teal-600">
+                        <h4 class="text-lg font-bold text-teal-700">P2: LIFO 순서</h4>
+                        <p class="text-sm mt-1">P1을 만족하는 선에서 배송 역순(LIFO)으로 트럭 안쪽부터 배치합니다.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-lg shadow-lg border-b-4 border-teal-600">
+                        <h4 class="text-lg font-bold text-teal-700">P3: 공간 최적화</h4>
+                        <p class="text-sm mt-1">빈 공간을 최소화하는 방향(3D Tetris)으로 최종 위치를 확정합니다.</p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Section 5: Target Users -->
+        <section id="users" class="bg-white py-16 sm:py-20">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-blue-900">이 시스템은 누구를 위한 것인가?</h2>
+                    <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">
+                        Logi-Optimus는 최종 소비자가 아닌, 물류 현장의 효율성을 고민하는 실무자들을 위해 설계되었습니다. (데이터: 보고서 3.1, 3.2)
+                    </p>
+                </div>
+
+                <div class="mt-12 max-w-4xl mx-auto">
+                    <!-- Tabs -->
+                    <div class="border-b border-slate-200">
+                        <nav class="flex -mb-px space-x-8" aria-label="Tabs">
+                            <button id="persona-tab-1" class="persona-tab tab-active whitespace-nowrap py-4 px-1 border-b-2 text-base sm:text-lg font-medium">
+                                Persona 1: 물류센터 관리자
+                            </button>
+                            <button id="persona-tab-2" class="persona-tab tab-inactive whitespace-nowrap py-4 px-1 border-b-2 text-base sm:text-lg font-medium">
+                                Persona 2: 배송 기사
+                            </button>
+                        </nav>
+                    </div>
+
+                    <!-- Tab Panels -->
+                    <div class="mt-8">
+                        <!-- Persona 1 Panel -->
+                        <div id="persona-panel-1" class="persona-panel">
+                            <div class="bg-white shadow-xl rounded-lg overflow-hidden md:flex">
+                                <div class="md:w-1/3 bg-slate-100 p-6 sm:p-8 text-center flex flex-col justify-center items-center">
+                                    <div class="text-6xl">👨‍💼</div>
+                                    <h3 class="text-2xl font-bold text-slate-800 mt-4">김철수 소장</h3>
+                                    <p class="text-lg text-slate-600">52세, 15년 차</p>
+                                    <span class="mt-4 inline-block bg-red-100 text-red-800 text-sm font-medium px-3 py-1 rounded-full">Web/IT 활용도: 중하</span>
+                                </div>
+                                <div class="md:w-2/3 p-6 sm:p-8">
+                                    <h4 class="text-xl font-bold text-blue-800">주요 니즈 (Needs)</h4>
+                                    <ul class="mt-3 list-disc list-inside text-slate-700 space-y-1">
+                                        <li>신입 기사도 베테랑처럼 일할 <span class="font-bold">표준화된 매뉴얼</span> 필요</li>
+                                        <li>기사들 동선 최적화로 <span class="font-bold">유류비 절감</span> 필요</li>
+                                        <li>아침 <span class="font-bold">적재 시간 단축</span>을 통한 효율성 증대</li>
+                                    </ul>
+                                    <h4 class="text-xl font-bold text-blue-800 mt-6">핵심 문제 (Pain Point)</h4>
+                                    <p class="mt-3 text-slate-700">
+                                        "신입이 자꾸 배송 실수해서 CS 처리하느라 힘들어. 엑셀 말고 좀 단순하고 바로 쓸 수 있는 거 없어? 아침에 짐 싣는 데만 1시간이야."
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Persona 2 Panel -->
+                        <div id="persona-panel-2" class="persona-panel hidden">
+                            <div class="bg-white shadow-xl rounded-lg overflow-hidden md:flex">
+                                <div class="md:w-1/3 bg-slate-100 p-6 sm:p-8 text-center flex flex-col justify-center items-center">
+                                    <div class="text-6xl">👨‍🚀</div>
+                                    <h3 class="text-2xl font-bold text-slate-800 mt-4">박영민 기사</h3>
+                                    <p class="text-lg text-slate-600">34세, 3년 차</p>
+                                    <span class="mt-4 inline-block bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full">Web/IT 활용도: 상</span>
+                                </div>
+                                <div class="md:w-2/3 p-6 sm:p-8">
+                                    <h4 class="text-xl font-bold text-blue-800">주요 니즈 (Needs)</h4>
+                                    <ul class="mt-3 list-disc list-inside text-slate-700 space-y-1">
+                                        <li>매일 다른 물량에 맞춘 <span class="font-bold">가장 빠른 배송 순서</span> 제공</li>
+                                        <li>배송 순서대로 <span class="font-bold">차곡차곡 싣는 가이드</span> 필요 (시간 절약)</li>
+                                    </ul>
+                                    <h4 class="text-xl font-bold text-blue-800 mt-6">핵심 문제 (Pain Point)</h4>
+                                    <p class="mt-3 text-slate-700">
+                                        "배송 속도가 내 수입인데... <span class="font-bold text-red-600">'분명 실었는데 어디 있지?'</span> 하면서 트럭 뒤지는 게 제일 시간 아까워요. 잘못 쌓아서 물건 파손되면 그것도 내 책임이고."
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6: UI Vision & Risks -->
+        <section id="vision" class="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+            <div class="text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-blue-900">UI 비전 및 주요 리스크</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">
+                    12월까지의 목표는 이 비전(설계)을 확립하는 것입니다. (데이터: 보고서 4.2.C, 5)
+                </p>
+            </div>
+
+            <div class="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- UI Vision -->
+                <div class="bg-white p-6 rounded-lg shadow-xl">
+                    <h3 class="text-2xl font-bold text-center text-slate-800 mb-4">핵심 UI 비전 (스케치)</h3>
+                    <p class="text-center text-slate-600 mb-6">최종 결과 화면입니다. 사용자는 한 화면에서 '경로'와 '적재'를 동시에 확인합니다.</p>
+                    <div class="flex flex-col md:flex-row h-80 border-2 border-slate-300 rounded-lg bg-slate-50">
+                        <!-- Left Panel -->
+                        <div class="w-full md:w-1/2 h-40 md:h-full border-b md:border-b-0 md:border-r border-slate-300 p-4 flex flex-col items-center justify-center text-slate-500">
+                            <span class="text-5xl">🗺️</span>
+                            <span class="text-lg font-bold mt-2">[ 좌측 영역 ]</span>
+                            <p class="text-sm text-center">최적 경로가 표시된 2D 지도 (Map View)</p>
+                        </div>
+                        <!-- Right Panel -->
+                        <div class="w-full md:w-1/2 h-40 md:h-full p-4 flex flex-col items-center justify-center text-slate-500">
+                            <span class="text-5xl">📦</span>
+                            <span class="text-lg font-bold mt-2">[ 우측 영역 ]</span>
+                            <p class="text-sm text-center">회전/확대 가능한 3D 적재 가이드 (3D View)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Risks -->
+                <div class="bg-white p-6 rounded-lg shadow-xl">
+                    <h3 class="text-2xl font-bold text-center text-slate-800 mb-4">주요 리스크 및 대응</h3>
+                    <p class="text-center text-slate-600 mb-6">우리가 100% 통제 가능한 프로젝트이므로 리스크 관리가 용이합니다.</p>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-slate-100 p-4 rounded-lg">
+                            <h4 class="text-lg font-bold text-blue-800">Risk 1: 3D 시각화 복잡성</h4>
+                            <p class="text-slate-600 text-sm mt-1">프론트엔드 팀의 Three.js 학습 곡선(Learning Curve)이 존재합니다.</p>
+                            <p class="text-teal-700 text-sm font-medium mt-2">→ 대응: 1월부터 즉시 Three.js 학습 및 '박스 쌓기' 프로토타이핑에 집중.</p>
+                        </div>
+                        <div class="bg-slate-100 p-4 rounded-lg">
+                            <h4 class="text-lg font-bold text-blue-800">Risk 2: 적재 알고리즘 복잡성</h4>
+                            <p class="text-slate-600 text-sm mt-1">완벽한 3D Packing은 NP-hard 문제입니다.</p>
+                            <p class="text-teal-700 text-sm font-medium mt-2">→ 대응: '완벽한 해'가 아닌 '준수한(Good-enough)' 휴리스틱 알고리즘(P0~P3 룰 기반)을 목표로 하여 난이도를 현실화.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-slate-300 py-12">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h3 class="text-2xl font-bold text-white">Logi-Optimus</h3>
+            <p class="mt-2 text-base text-slate-400">AI 기반 배송-적재 E2E 최적화 시스템 | 졸업작품 프로젝트</p>
+            <p class="mt-4 text-sm text-slate-500">
+                팀:  박은호, 박진호, 이샛별, 김민혁, 라이샬
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // Mobile Menu Toggle
+            const menuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            if (menuButton && mobileMenu) {
+                menuButton.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+
+            // Close mobile menu on link click
+            document.querySelectorAll('.mobile-menu-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (mobileMenu) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+
+            // Smooth Scrolling
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    if (this.getAttribute('href') === '#') return;
+                    e.preventDefault();
+                    try {
+                        const targetElement = document.querySelector(this.getAttribute('href'));
+                        if (targetElement) {
+                            const headerOffset = 64; // Height of sticky header
+                            const elementPosition = targetElement.getBoundingClientRect().top;
+                            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                            window.scrollTo({
+                                top: offsetPosition,
+                                behavior: 'smooth'
+                            });
+                        }
+                    } catch (error) {
+                        console.warn('Smooth scroll target not found:', this.getAttribute('href'));
+                    }
+                });
+            });
+
+            // Persona Tabs
+            const tabs = document.querySelectorAll('.persona-tab');
+            const panels = document.querySelectorAll('.persona-panel');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetPanelId = tab.id.replace('tab', 'panel');
+                    
+                    tabs.forEach(t => {
+                        t.classList.remove('tab-active');
+                        t.classList.add('tab-inactive');
+                    });
+                    
+                    tab.classList.add('tab-active');
+                    tab.classList.remove('tab-inactive');
+                    
+                    panels.forEach(panel => {
+                        if (panel.id === targetPanelId) {
+                            panel.classList.remove('hidden');
+                        } else {
+                            panel.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            // Chart.js Benchmark Chart
+            try {
+                const ctx = document.getElementById('benchmarkChart');
+                if (ctx) {
+                    const chartCtx = ctx.getContext('2d');
+                    if (!chartCtx) return;
+                    
+                    // From Report 2.2: 
+                    // ⭕(핵심)=3, ⭕(제공/연동)=2, △(부분/커스텀)=1, ❌=0
+                    // 접근성: 최상=3, 상=2, 하=0, 최하=0
+                    const benchmarkData = {
+                        labels: ['경로 최적화', '공간 최적화', "'LIFO' 연동", "'현실 제약' (무게/파손)", '접근성 (Web/Cost)'],
+                        datasets: [
+                            {
+                                label: '유형 1: 경로 API (TMAP)',
+                                data: [3, 0, 0, 0, 2],
+                                backgroundColor: 'rgba(148, 163, 184, 0.7)', // slate-400
+                                borderColor: 'rgba(148, 163, 184, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: '유형 2: 3D 적재 S/W',
+                                data: [0, 3, 0, 1, 0],
+                                backgroundColor: 'rgba(244, 63, 94, 0.7)', // rose-500
+                                borderColor: 'rgba(244, 63, 94, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: '유형 3: 대기업 통합 S/W',
+                                data: [2, 2, 1, 1, 0],
+                                backgroundColor: 'rgba(107, 114, 128, 0.7)', // gray-500
+                                borderColor: 'rgba(107, 114, 128, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Logi-Optimus (본 프로젝트)',
+                                data: [2, 3, 3, 3, 3],
+                                backgroundColor: 'rgba(20, 184, 166, 0.7)', // teal-500
+                                borderColor: 'rgba(20, 184, 166, 1)',
+                                borderWidth: 2
+                            }
+                        ]
+                    };
+
+                    const chartOptions = {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: '솔루션 유형별 기능 제공 현황 비교',
+                                padding: { top: 10, bottom: 20 },
+                                font: { size: 18, weight: 'bold', family: "'Noto Sans KR', sans-serif" }
+                            },
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { family: "'Noto Sans KR', sans-serif" }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    title: function(tooltipItems) {
+                                        const item = tooltipItems[0];
+                                        let label = item.chart.data.labels[item.dataIndex];
+                                        if (Array.isArray(label)) {
+                                            return label.join(' ');
+                                        } else {
+                                            return label;
+                                        }
+                                    },
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) { label += ': '; }
+                                        const value = context.parsed.y;
+                                        let text = '';
+                                        switch(value) {
+                                            case 0: text = '미제공 / ❌'; break;
+                                            case 1: text = '부분 제공 / △'; break;
+                                            case 2: text = '제공 / ⭕'; break;
+                                            case 3: text = '핵심 기능 / ⭐️'; break;
+                                            default: text = 'N/A';
+                                        }
+                                        return ' ' + label + text;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    font: { family: "'Noto Sans KR', sans-serif" },
+                                    autoSkip: false,
+                                    maxRotation: 0
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                max: 3.5,
+                                ticks: {
+                                    stepSize: 1,
+                                    callback: function(value) {
+                                        switch(value) {
+                                            case 0: return '미제공 (❌)';
+                                            case 1: return '부분 (△)';
+                                            case 2: return '제공 (⭕)';
+                                            case 3: return '핵심 (⭐️)';
+                                            default: return '';
+                                        }
+                                    },
+                                    font: { family: "'Noto Sans KR', sans-serif" }
+                                }
+                            }
+                        }
+                    };
+
+                    new Chart(chartCtx, {
+                        type: 'bar',
+                        data: benchmarkData,
+                        options: chartOptions
+                    });
+                }
+            } catch (e) {
+                console.error("Chart.js 렌더링 오류:", e);
+                const chartContainer = document.getElementById('benchmarkChart');
+                if(chartContainer) {
+                    chartContainer.parentElement.innerHTML = '<p class="text-center text-red-500">차트를 불러오는 데 실패했습니다.</p>';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
