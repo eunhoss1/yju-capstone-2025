@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logi-Optimus 프로젝트 가치 분석</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony (White / Slate / Blue) -->
+    <!-- Application Structure Plan: 이 SPA는 "이 기획이 왜 현실에 없는가?"라는 핵심 질문에 답하는 논증(FAQ) 구조로 설계됨. Hero(핵심 결론) → 질문 제기 → 1. 시장 구조의 문제 (다이어그램) → 2. 수익 모델의 문제 → 3. "그래서 왜 이것이 완벽한 '졸작'인가?" (핵심) → 4. 기술적 현실성 검증 (인터랙티브 탭). 이 구조는 사용자의 의심을 논리적 순서로 해결하고 설득함. -->
+    <!-- Visualization & Content Choices: 1. 시장 구조(분업화) -> 목표: 정리 -> 시각화: HTML/Tailwind 다이어그램(CSS Box) -> 근거: SVG 없이 '끊어진 고리'를 시각화. 2. 기술적 현실성(API, AI, 3D) -> 목표: 정리/비교 -> 시각화: Javascript 탭 인터페이스 -> 상호작용: 클릭 전환 -> 근거: 3가지 핵심 기술의 'Easy/Hard Mode'를 분리하여 기술적 허들을 낮추고 현실성을 증명. 3. S/W vs H/W -> 목표: 비교 -> 시각화: HTML/Tailwind 분할 카드 -> 근거: '우리가 할 일(뇌)'과 '미래 비전(몸)'을 명확히 분리. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .tab-active {
+            border-bottom: 2px solid #3b82f6;
+            color: #3b82f6;
+            font-weight: 700;
+        }
+        .tab-inactive {
+            color: #64748b;
+            border-bottom: 2px solid transparent;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <main class="container mx-auto max-w-4xl py-12 px-4">
+
+        <!-- 1. Hero: The Core Thesis -->
+        <section class="mb-16 text-center">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-blue-600 tracking-tight">
+                "필요성은 충분하나,<br>수익 구조 문제로 기업이 안 만든 겁니다."
+            </h1>
+            <p class="mt-6 text-xl text-slate-700 font-bold">Logi-Optimus 프로젝트 가치 분석 보고서</p>
+            <p class="mt-2 text-lg text-slate-600 max-w-2xl mx-auto">
+                "현실에 수요가 있는데 왜 아무도 안 만들었지?"<br>
+                이 질문을 파고드는 것이 진짜 기획의 시작입니다.
+            </p>
+        </section>
+
+        <!-- 2. The Core Problem: Market Structure -->
+        <section id="market-problem" class="mb-16">
+            <h2 class="text-3xl font-bold text-slate-900 mb-6 pb-2 border-b-2 border-blue-200">
+                1. 핵심 원인: 극도로 '분업화'된 시장 구조
+            </h2>
+            <p class="text-lg text-slate-700 mb-8">
+                '경로'와 '적재'를 하나의 회사가 통제하지 않습니다. 서로 다른 주체가 맡고 있어, 이 "끊어진 고리"를 묶을 주체가 없었습니다.
+            </p>
+            <!-- HTML/CSS Diagram -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                <div class="bg-white p-6 rounded-lg shadow-lg border-2 border-slate-300">
+                    <h3 class="text-xl font-bold text-blue-700">대기업 본사</h3>
+                    <p class="mt-2 text-slate-600">TMS/WMS (내부 시스템)</p>
+                    <p class="mt-1 text-sm text-red-600 font-medium">(중소업체와 연동 안 됨)</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg border-2 border-slate-300">
+                    <h3 class="text-xl font-bold text-blue-700">중소 배송대리점</h3>
+                    <p class="mt-2 text-slate-600">엑셀/수기 관리</p>
+                    <p class="mt-1 text-sm text-red-600 font-medium">(시스템 투자 여력 없음)</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg border-2 border-slate-300">
+                    <h3 class="text-xl font-bold text-blue-700">배송 기사 (개인사업자)</h3>
+                    <p class="mt-2 text-slate-600">TMAP (개인 앱)</p>
+                    <p class="mt-1 text-sm text-red-600 font-medium">(적재는 100% 개인 경험)</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. The Business Problem: Profitability -->
+        <section id="business-problem" class="mb-16">
+            <h2 class="text-3xl font-bold text-slate-900 mb-6 pb-2 border-b-2 border-blue-200">
+                2. 수익 모델의 부재: "돈이 안 된다"
+            </h2>
+            <p class="text-lg text-slate-700 mb-8">
+                "필요는 하지만 돈이 안 돼서 안 만들었다"는 것이 냉정한 결론입니다. 수요는 있지만, 아무도 지불할 의사가 없는 시장 구조입니다.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold text-slate-800">기사 (개인사업자)</h3>
+                    <p class="mt-2 text-slate-600 text-red-700 font-semibold">→ "SaaS 구독? 안 사."</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold text-slate-800">중소 배송대리점</h3>
+                    <p class="mt-2 text-slate-600 text-red-700 font-semibold">→ "비용 절감 압박 심해. 안 사."</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold text-slate-800">대기업 본사</h3>
+                    <p class="mt-2 text-slate-600 text-red-700 font-semibold">→ "자체 시스템 있어. 안 사."</p>
+                </div>
+            </div>
+            <p class="mt-6 text-center text-lg font-medium text-slate-700">
+                기술은 가능하나 사업이 애매하니, 스타트업도 투자를 안 합니다.
+            </p>
+        </section>
+
+        <!-- 4. The "Why": Perfect for Graduation Project -->
+        <section id="why-us" class="mb-16">
+            <div class="bg-white p-8 rounded-lg shadow-2xl border-t-8 border-blue-600">
+                <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-6 text-center">
+                    그래서, 이게 왜 '의미 있는' 졸업작품인가?
+                </h2>
+                <p class="text-xl text-slate-700 mb-8 text-center max-w-3xl mx-auto">
+                    기업은 수익성 문제로 쉽게 못 건드린 기술을,<br>
+                    우리는 '학술적 관점'에서 자유롭게 만들 수 있는 유일한 위치에 있기 때문입니다.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg">
+                    <div class="bg-blue-50 p-5 rounded-lg border-l-4 border-blue-500">
+                        <h4 class="font-bold text-blue-800">기업 (Enterprise)</h4>
+                        <ul class="mt-2 list-disc list-inside text-slate-700">
+                            <li>수익성(ROI) 계산해야 함</li>
+                            <li>개발비/유지보수비 발생</li>
+                            <li>정치적/이해관계 복잡</li>
+                            <li class="font-bold text-red-600">→ "투자 우선순위에서 제외."</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-50 p-5 rounded-lg border-l-4 border-slate-500">
+                        <h4 class="font-bold text-slate-800">우리 (졸업작품)</h4>
+                        <ul class="mt-2 list-disc list-inside text-slate-700">
+                            <li>수익성(ROI) 필요 없음</li>
+                            <li>개발비/유지보수비 0원</li>
+                            <li>정치/이해관계 없음</li>
+                            <li class="font-bold text-green-600">→ "순수 기술 관점에서 구현 가능."</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Technical Feasibility -->
+        <section id="feasibility" class="mb-16">
+            <h2 class="text-3xl font-bold text-slate-900 mb-6 pb-2 border-b-2 border-blue-200">
+                4. 기술적 현실성: 100% 구현 가능 (우수 주제)
+            </h2>
+            <p class="text-lg text-slate-700 mb-8">
+                이 프로젝트는 "통제 불가능한 변수"가 0입니다. 모든 기술은 이미 존재하며, 우리는 '조합'과 '연결'에 집중합니다. 난이도 조절(Scoping)이 완벽하게 가능합니다.
+            </p>
+
+            <!-- Tech Feasibility Tabs -->
+            <div>
+                <!-- Tabs -->
+                <div class="border-b border-slate-200">
+                    <nav class="flex -mb-px space-x-8" aria-label="Tabs">
+                        <button id="tech-tab-1" class="tech-tab tab-active whitespace-nowrap py-4 px-1 border-b-2 text-base sm:text-lg font-medium">
+                            ① 경로 최적화 (API)
+                        </button>
+                        <button id="tech-tab-2" class="tech-tab tab-inactive whitespace-nowrap py-4 px-1 border-b-2 text-base sm:text-lg font-medium">
+                            ② AI 적재 (알고리즘)
+                        </button>
+                        <button id="tech-tab-3" class="tech-tab tab-inactive whitespace-nowrap py-4 px-1 border-b-2 text-base sm:text-lg font-medium">
+                            ③ 3D 시각화 (Three.js)
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Tab Panels -->
+                <div class="mt-8">
+                    <!-- Tech 1 Panel -->
+                    <div id="tech-panel-1" class="tech-panel bg-white p-6 rounded-lg shadow-lg">
+                        <h3 class="text-2xl font-bold text-blue-700 mb-4">① 경로 최적화 (API)</h3>
+                        <p class="text-lg text-slate-600 mb-4">
+                            우리가 '발명'할 필요가 없습니다. TMAP, Naver 등이 이미 완벽하게 해결해 놨습니다.
+                        </p>
+                        <div class="bg-slate-100 p-4 rounded-lg">
+                            <h4 class="text-lg font-bold text-slate-800">우리의 임무 (난이도: 하)</h4>
+                            <p class="mt-1 text-slate-700">API '주문서(Request)'에 주소 엑셀을 던지고, API '답변서(Response)'로 오는 경로 순서(A→C→B)를 받기만 하면 됩니다.</p>
+                        </div>
+                    </div>
+                    <!-- Tech 2 Panel -->
+                    <div id="tech-panel-2" class="tech-panel hidden bg-white p-6 rounded-lg shadow-lg">
+                        <h3 class="text-2xl font-bold text-blue-700 mb-4">② AI 적재 (알고리즘)</h3>
+                        <p class="text-lg text-slate-600 mb-4">
+                            '완벽한 3D 테트리스 신(神)'을 만드는 게 아닙니다. '현실적인 룰(Rule)'을 따르는 똑똑한 알고리즘을 만듭니다.
+                        </p>
+                        <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+                            <h4 class="text-lg font-bold text-blue-800">[Easy Mode] 1년 목표 (난이도: 중상)</h4>
+                            <p class="mt-1 text-slate-700">'if문'과 '정렬(Sort)'로 4가지 현실 룰(P0~P3: 묶음, 무게, LIFO, 공간)을 구현, 'Good-enough'한 (x,y,z) 좌표를 계산합니다.</p>
+                        </div>
+                        <div class="bg-slate-100 p-4 rounded-lg mt-4">
+                            <h4 class="text-lg font-bold text-slate-800">[Hard Mode] 미래 비전</h4>
+                            <p class="mt-1 text-slate-700">유전 알고리즘 등을 도입해 빈 공간 0.1%까지 줄이는 '완벽한 최적화'에 도전합니다.</p>
+                        </div>
+                    </div>
+                    <!-- Tech 3 Panel -->
+                    <div id="tech-panel-3" class="tech-panel hidden bg-white p-6 rounded-lg shadow-lg">
+                        <h3 class="text-2xl font-bold text-blue-700 mb-4">③ 3D 시각화 (Three.js)</h3>
+                        <p class="text-lg text-slate-600 mb-4">
+                            '3D 게임 엔진'을 만드는 게 아닙니다. '좌표값 뷰어'를 만드는 겁니다.
+                        </p>
+                        <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+                            <h4 class="text-lg font-bold text-blue-800">[Easy Mode] 1년 목표 (난이도: 중)</h4>
+                            <p class="mt-1 text-slate-700">백엔드가 준 (x,y,z) 좌표대로, 튜토리얼 예제를 활용해 '회색 박스'를 3D 공간에 `for`문으로 그려줍니다.</p>
+                        </div>
+                        <div class="bg-slate-100 p-4 rounded-lg mt-4">
+                            <h4 class="text-lg font-bold text-slate-800">[Hard Mode] 미래 비전</h4>
+                            <p class="mt-1 text-slate-700">트럭 모델링을 입히고, 박스 스티커를 붙이고, 적재 애니메이션을 추가합니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. Vision: Brain + Body -->
+        <section id="vision" class="mb-16">
+            <h2 class="text-3xl font-bold text-slate-900 mb-6 pb-2 border-b-2 border-blue-200">
+                5. 최종 비전: '뇌(S/W)'와 '몸(H/W)'의 결합
+            </h2>
+            <p class="text-lg text-slate-700 mb-8">
+                우리는 1년 동안 '뇌(소프트웨어)'를 완벽하게 만듭니다. 이 '뇌'는 '몸(로봇)'으로 즉시 확장될 수 있습니다.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-6">
+                <!-- Phase 1 -->
+                <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-xl border-t-4 border-blue-600">
+                    <h3 class="text-2xl font-bold text-blue-800 mb-4">Phase 1: '뇌' (S/W) - (우리의 1년 목표)</h3>
+                    <p class="text-slate-600 mb-4">AI가 계산한 (x,y,z) 좌표 설계도를 '웹사이트(3D 뷰어)'로 시각화합니다.</p>
+                    <div class="text-center bg-slate-100 p-4 rounded-lg">
+                        <span class="text-lg font-bold text-slate-700">→ "사람 기사님"</span>이 3D 뷰를 보고 '직접' 적재 (설명서)
+                    </div>
+                </div>
+                
+                <div class="text-center text-5xl font-bold text-slate-400 my-4 md:my-0">
+                    +
+                </div>
+
+                <!-- Phase 2 -->
+                <div class="bg-slate-800 text-white p-6 rounded-lg shadow-xl border-t-4 border-teal-500">
+                    <h3 class="text-2xl font-bold text-teal-400 mb-4">Phase 2: '몸' (H/W) - (미래 비전)</h3>
+                    <p class="text-slate-300 mb-4">AI가 계산한 (x,y,z) 좌표 설계도를 '자동화 로봇'으로 전송합니다.</p>
+                    <div class="text-center bg-slate-700 p-4 rounded-lg">
+                        <span class="text-lg font-bold text-white">→ "로봇 팔"</span>이 설계도를 보고 '자동' 적재 (명령서)
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. Conclusion -->
+        <section id="conclusion" class="text-center py-12">
+            <h2 class="text-4xl font-extrabold text-blue-700 mb-4">
+                결론: 가치 있는 "졸업작품 주제"
+            </h2>
+            <p class="text-xl text-slate-700 max-w-3xl mx-auto">
+                기업은 '수익성' 때문에 안 만든 기술을, 학생은 '기술적 가치'로 만들 수 있습니다.<br>
+                수요는 존재하나, 시장 구조의 문제로 상용화되지 않은 것.<br>
+                이것이 우리 프로젝트가 '의미 있는 틈새'인 이유입니다.
+            </p>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // Tech Tabs Logic
+            const tabs = document.querySelectorAll('.tech-tab');
+            const panels = document.querySelectorAll('.tech-panel');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetPanelId = tab.id.replace('tab', 'panel');
+                    
+                    tabs.forEach(t => {
+                        t.classList.remove('tab-active');
+                        t.classList.add('tab-inactive');
+                        t.setAttribute('aria-selected', 'false');
+                    });
+                    
+                    tab.classList.add('tab-active');
+                    tab.classList.remove('tab-inactive');
+                    tab.setAttribute('aria-selected', 'true');
+                    
+                    panels.forEach(panel => {
+                        if (panel.id === targetPanelId) {
+                            panel.classList.remove('hidden');
+                        } else {
+                            panel.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            // Smooth Scrolling
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    if (this.getAttribute('href') === '#') return;
+                    e.preventDefault();
+                    try {
+                        const targetElement = document.querySelector(this.getAttribute('href'));
+                        if (targetElement) {
+                            targetElement.scrollIntoView({
+                                behavior: 'smooth'
+                            });
+                        }
+                    } catch (error) {
+                        console.warn('Smooth scroll target not found:', this.getAttribute('href'));
+                    }
+                });
+            });
+
+        });
+    </script>
+</body>
+</html>
