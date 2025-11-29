@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logi-Optimus | Integrated Console</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; }
+        
+        /* Navigation Styles */
+        .nav-item { transition: all 0.2s; border-left: 4px solid transparent; cursor: pointer; }
+        .nav-item:hover { background-color: #f1f5f9; color: #334155; }
+        .nav-item.active { background: linear-gradient(90deg, rgba(37,99,235,0.1) 0%, transparent 100%); border-left-color: #2563eb; color: #2563eb; font-weight: 600; }
+
+        /* Page Transitions */
+        .page-section { display: none; opacity: 0; transition: opacity 0.3s ease-in-out; }
+        .page-section.active { display: flex; opacity: 1; }
+
+        /* 3D Truck Styles */
+        .truck-stage { perspective: 1000px; overflow: hidden; }
+        .truck-body { 
+            transform: rotateX(10deg) rotateY(-10deg); 
+            transform-style: preserve-3d; 
+            transition: transform 0.5s; 
+        }
+        .truck-body:hover { transform: rotateX(0deg) rotateY(0deg); }
+
+        /* Animations */
+        @keyframes scan-line { 0% { top: 0; opacity: 0.5; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0.5; } }
+        .scan-beam { position: absolute; width: 100%; height: 4px; background: #ef4444; box-shadow: 0 0 15px #ef4444; animation: scan-line 1.5s infinite linear; }
+        
+        .highlight-box { 
+            border: 3px solid #22c55e !important; 
+            background-color: #4ade80 !important;
+            box-shadow: 0 0 20px #22c55e; 
+            z-index: 50; 
+            transform: scale(1.05);
+            transition: all 0.3s;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-slate-800">
+
+    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col z-30 shadow-sm">
+        <div class="h-16 flex items-center px-6 border-b border-slate-100">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl mr-3 shadow-lg shadow-blue-200">L</div>
+            <span class="text-xl font-bold tracking-tight text-slate-900">Logi-Optimus</span>
+        </div>
+
+        <nav class="flex-1 py-6 space-y-1 overflow-y-auto">
+            <div class="px-6 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Main Module</div>
+            <a onclick="switchPage('dashboard')" id="menu-dashboard" class="nav-item active flex items-center px-6 py-3 text-sm">
+                <i class="fa-solid fa-cloud-arrow-up w-6 text-center mr-2"></i> 대시보드 (Upload)
+            </a>
+            <a onclick="switchPage('result')" id="menu-result" class="nav-item flex items-center px-6 py-3 text-slate-500 text-sm">
+                <i class="fa-solid fa-map-location-dot w-6 text-center mr-2"></i> 최적화 결과
+            </a>
+            <a onclick="switchPage('history')" id="menu-history" class="nav-item flex items-center px-6 py-3 text-slate-500 text-sm">
+                <i class="fa-solid fa-clipboard-list w-6 text-center mr-2"></i> 배송 이력
+            </a>
+
+            <div class="px-6 mt-8 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">System</div>
+            <a onclick="alert('차량 제원 관리 페이지입니다.')" class="nav-item flex items-center px-6 py-3 text-slate-500 text-sm">
+                <i class="fa-solid fa-truck-front w-6 text-center mr-2"></i> 차량 관리
+            </a>
+            <a onclick="alert('시스템 설정 페이지입니다.')" class="nav-item flex items-center px-6 py-3 text-slate-500 text-sm">
+                <i class="fa-solid fa-gear w-6 text-center mr-2"></i> 설정 (Settings)
+            </a>
+            <a onclick="alert('고객 지원 센터입니다.')" class="nav-item flex items-center px-6 py-3 text-slate-500 text-sm">
+                <i class="fa-solid fa-headset w-6 text-center mr-2"></i> 고객 지원
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-100 bg-slate-50">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-slate-300 flex items-center justify-center"><i class="fa-solid fa-user text-slate-500"></i></div>
+                <div>
+                    <p class="text-sm font-bold text-slate-700">김철수 기사님</p>
+                    <p class="text-xs text-slate-500">경기지부 / 1톤 카고</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col relative bg-slate-50">
+        <header class="h-16 bg-white border-b border-slate-200 flex justify-between items-center px-8 shadow-sm z-20">
+            <h2 class="text-lg font-bold text-slate-800" id="page-title">대시보드</h2>
+            <div class="flex items-center gap-4">
+                <div class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold flex items-center gap-2">
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Online
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 relative overflow-hidden p-6">
+
+            <div id="page-dashboard" class="page-section active absolute inset-0 flex flex-col items-center justify-center p-6">
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-extrabold text-slate-900 mb-2">오늘의 배송 준비</h1>
+                    <p class="text-slate-500">할당된 배송 엑셀 파일을 업로드해주세요.</p>
+                </div>
+                
+                <div onclick="startOptimization()" class="bg-white border-2 border-dashed border-slate-300 rounded-2xl p-12 hover:border-blue-500 hover:bg-blue-50 transition cursor-pointer group shadow-sm w-full max-w-xl text-center">
+                    <div class="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-file-excel"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-700">배송 리스트 업로드</h3>
+                    <p class="text-sm text-slate-400 mt-2">Click to upload .xlsx / .csv</p>
+                </div>
+
+                <div id="loading-ui" class="hidden absolute inset-0 bg-white/90 z-50 flex flex-col items-center justify-center backdrop-blur-sm">
+                    <div class="w-16 h-16 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+                    <p class="text-lg font-bold text-slate-700">AI 적재 경로 분석 중...</p>
+                    <p class="text-sm text-slate-500 mt-2">LIFO 정렬 • 물리 제약 검증 • 3D 모델링</p>
+                </div>
+            </div>
+
+            <div id="page-result" class="page-section absolute inset-0 p-6 gap-6">
+                
+                <div class="w-1/2 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col relative overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                        <h3 class="font-bold text-slate-700"><i class="fa-solid fa-map-location-dot mr-2 text-blue-600"></i>최적 경로 (TMAP)</h3>
+                        <span class="text-xs font-bold bg-white border px-2 py-1 rounded text-slate-500">42건 / 54km</span>
+                    </div>
+                    <div class="flex-1 relative bg-slate-100">
+                        <div class="absolute inset-0 opacity-40" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg'); background-size: cover;"></div>
+                        <svg class="absolute inset-0 w-full h-full"><path d="M 150 250 Q 300 100 450 300 T 700 350" stroke="#3b82f6" stroke-width="4" fill="none" stroke-dasharray="8"/></svg>
+                        
+                        <div class="absolute top-[45%] left-[65%] flex flex-col items-center">
+                            <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold shadow-lg border-2 border-white z-10">1</div>
+                            <span class="text-xs font-bold bg-slate-800 text-white px-2 py-1 rounded mt-1">A-101동</span>
+                        </div>
+                        <div class="absolute top-[30%] left-[25%] flex flex-col items-center opacity-60">
+                            <div class="w-8 h-8 bg-slate-400 text-white rounded-full flex items-center justify-center font-bold shadow border-2 border-white">L</div>
+                            <span class="text-xs font-bold bg-slate-500 text-white px-2 py-1 rounded mt-1">C-빌라</span>
+                        </div>
+                    </div>
+                    <div class="p-4 border-t">
+                        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold shadow transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i> 경로 안내 시작
+                        </button>
+                    </div>
+                </div>
+
+                <div class="w-1/2 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col relative overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                        <h3 class="font-bold text-slate-700"><i class="fa-solid fa-cubes mr-2 text-indigo-600"></i>3D 적재 가이드</h3>
+                        <div class="flex bg-white rounded-lg border border-slate-200 p-1">
+                            <button id="btn-view" class="px-3 py-1 text-xs font-bold bg-slate-100 rounded text-slate-700">뷰어</button>
+                            <button id="btn-scan" class="px-3 py-1 text-xs font-bold text-slate-400 hover:text-blue-600" onclick="toggleScanner()">스캔 모드</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 relative flex items-center justify-center truck-stage" style="background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px;">
+                        
+                        <div id="scanner-ui" class="hidden absolute inset-0 bg-slate-900/90 z-40 flex flex-col items-center justify-center">
+                            <div class="w-64 h-40 border-2 border-white/30 rounded-xl relative overflow-hidden mb-4 bg-black/50">
+                                <div class="scan-beam"></div>
+                                <div class="absolute inset-0 flex items-center justify-center"><i class="fa-solid fa-barcode text-5xl text-white/20"></i></div>
+                            </div>
+                            <p class="text-white font-bold mb-4">박스 바코드를 스캔하세요</p>
+                            <button class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-full font-bold shadow-lg animate-bounce" onclick="simulateScan()">[Test] 스캔 시뮬레이션</button>
+                        </div>
+
+                        <div class="truck-body w-[280px] h-[380px] bg-slate-200 border-4 border-slate-400 rounded-b-xl shadow-2xl relative p-4">
+                            <div class="absolute -top-8 w-full text-center text-xs font-bold text-slate-400">TRUCK FRONT (안쪽)</div>
+                            <div class="grid grid-cols-3 gap-2 h-full content-end">
+                                <div class="h-20 bg-slate-400 rounded flex items-center justify-center text-white font-bold opacity-40">C</div>
+                                <div class="h-20 bg-slate-400 rounded flex items-center justify-center text-white font-bold opacity-40">C</div>
+                                <div class="h-20 bg-slate-400 rounded flex items-center justify-center text-white font-bold opacity-40">C</div>
+                                <div class="h-20 bg-indigo-300 rounded flex items-center justify-center text-white font-bold opacity-60">B</div>
+                                <div class="h-20 bg-indigo-300 rounded flex items-center justify-center text-white font-bold opacity-60">B</div>
+                                <div class="h-20 bg-indigo-300 rounded flex items-center justify-center text-white font-bold opacity-60">B</div>
+                                <div class="h-20 bg-blue-600 rounded border-b-4 border-blue-800 flex items-center justify-center text-white font-bold shadow-md">A-1</div>
+                                <div class="h-20 bg-blue-600 rounded border-b-4 border-blue-800 flex items-center justify-center text-white font-bold shadow-md">A-2</div>
+                                <div id="target-box" class="h-20 bg-red-100 border-2 border-dashed border-red-400 rounded flex flex-col items-center justify-center text-red-400 font-bold transition-all">
+                                    <i class="fa-solid fa-arrow-down mb-1"></i><span class="text-[10px]">빈 곳</span>
+                                </div>
+                            </div>
+                            <div class="absolute -bottom-8 w-full text-center text-xs font-bold text-blue-600">TRUCK REAR (문쪽)</div>
+                        </div>
+
+                        <div id="scan-toast" class="absolute bottom-4 bg-slate-800 text-white px-6 py-3 rounded-full shadow-xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300">
+                            <i class="fa-solid fa-check-circle text-green-400 text-xl"></i>
+                            <div><span class="font-bold">A-101동 (파손주의)</span> 확인됨</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-history" class="page-section absolute inset-0 flex-col p-6 overflow-y-auto">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase">이번 달 배송</p>
+                                <p class="text-3xl font-extrabold text-slate-800 mt-2">1,240 <span class="text-sm font-normal text-slate-400">건</span></p>
+                            </div>
+                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><i class="fa-solid fa-box"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase">평균 적재 효율</p>
+                                <p class="text-3xl font-extrabold text-teal-600 mt-2">92.4 <span class="text-sm font-normal text-slate-400">%</span></p>
+                            </div>
+                            <div class="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center"><i class="fa-solid fa-chart-pie"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase">예상 절감 비용</p>
+                                <p class="text-3xl font-extrabold text-indigo-600 mt-2">45 <span class="text-sm font-normal text-slate-400">만원</span></p>
+                            </div>
+                            <div class="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fa-solid fa-coins"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-slate-50 text-slate-500 font-bold border-b border-slate-100">
+                            <tr>
+                                <th class="px-6 py-4">날짜</th>
+                                <th class="px-6 py-4">배송지 수</th>
+                                <th class="px-6 py-4">이동 거리</th>
+                                <th class="px-6 py-4">적재 효율</th>
+                                <th class="px-6 py-4">상태</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            <tr class="hover:bg-blue-50 transition cursor-pointer">
+                                <td class="px-6 py-4 font-bold text-slate-700">2023-11-18 (오늘)</td>
+                                <td class="px-6 py-4">42 곳</td>
+                                <td class="px-6 py-4">54.2 km</td>
+                                <td class="px-6 py-4 text-teal-600 font-bold">87.5%</td>
+                                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">배송중</span></td>
+                            </tr>
+                            <tr class="hover:bg-blue-50 transition cursor-pointer">
+                                <td class="px-6 py-4 text-slate-600">2023-11-17</td>
+                                <td class="px-6 py-4">38 곳</td>
+                                <td class="px-6 py-4">48.1 km</td>
+                                <td class="px-6 py-4 text-teal-600 font-bold">91.2%</td>
+                                <td class="px-6 py-4"><span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs font-bold">완료</span></td>
+                            </tr>
+                            <tr class="hover:bg-blue-50 transition cursor-pointer">
+                                <td class="px-6 py-4 text-slate-600">2023-11-16</td>
+                                <td class="px-6 py-4">55 곳</td>
+                                <td class="px-6 py-4">62.5 km</td>
+                                <td class="px-6 py-4 text-teal-600 font-bold">89.8%</td>
+                                <td class="px-6 py-4"><span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs font-bold">완료</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Page Switching Logic
+        function switchPage(pageId) {
+            // Update Menu Active State
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('menu-' + pageId).classList.add('active');
+
+            // Hide All Sections
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+            
+            // Show Target Section
+            document.getElementById('page-' + pageId).classList.add('active');
+
+            // Update Header Title
+            const titles = { 'dashboard': '대시보드', 'result': '최적화 결과', 'history': '배송 이력 관리' };
+            document.getElementById('page-title').innerText = titles[pageId];
+        }
+
+        // Dashboard -> Result Logic
+        function startOptimization() {
+            document.getElementById('loading-ui').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('loading-ui').classList.add('hidden');
+                switchPage('result');
+            }, 2000);
+        }
+
+        // Scan Simulation Logic
+        function toggleScanner() {
+            document.getElementById('scanner-ui').classList.remove('hidden');
+        }
+
+        function simulateScan() {
+            document.getElementById('scanner-ui').classList.add('hidden');
+            
+            // Target Box Animation
+            const target = document.getElementById('target-box');
+            target.className = "h-20 bg-green-500 rounded border-b-4 border-green-700 flex flex-col items-center justify-center text-white font-bold shadow-lg highlight-box";
+            target.innerHTML = 'A-3<br><i class="fa-solid fa-check text-xs"></i>';
+
+            // Toast Notification
+            const toast = document.getElementById('scan-toast');
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
+        }
+    </script>
+</body>
+</html>
