@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logi-Optimus 로직 시각화 (Side View Edition)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        :root { --bg-dark: #0f172a; --panel-bg: rgba(30, 41, 59, 0.6); --border-color: rgba(148, 163, 184, 0.2); --accent-blue: #3b82f6; --accent-green: #10b981; --accent-red: #ef4444; --text-main: #f8fafc; --text-sub: #94a3b8; }
+        body { background-color: var(--bg-dark); background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%); color: var(--text-main); font-family: 'Pretendard', sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+        .stage { display: flex; width: 95%; max-width: 1400px; height: 70vh; gap: 20px; position: relative; }
+        .zone { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 16px; backdrop-filter: blur(12px); padding: 20px; position: relative; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; }
+        .zone-header { font-size: 1rem; font-weight: 800; letter-spacing: -0.5px; color: var(--text-sub); margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        #zone-input { flex: 1; }
+        #zone-logic { flex: 0.8; display: flex; flex-direction: column; justify-content: center; gap: 15px; background: rgba(15, 23, 42, 0.8); }
+        .step-card { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; text-align: center; font-size: 1rem; color: var(--text-sub); transition: all 0.4s ease; position: relative; line-height: 1.4; }
+        .step-card strong { display: block; font-size: 1.1rem; margin-bottom: 4px; }
+        .step-card.active { background: rgba(59, 130, 246, 0.2); border-color: var(--accent-blue); color: white; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); transform: scale(1.05); }
+        .step-arrow { text-align: center; color: var(--border-color); font-size: 0.8rem; }
+        .step-card.active + .step-arrow { color: var(--accent-blue); }
+        #zone-output { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+        
+        /* Truck Side View Design */
+        .truck-frame { 
+            width: 320px; /* 조금 더 넓게 */
+            height: 380px; 
+            border: 4px solid #334155; 
+            border-right: none; /* 오른쪽(문) 열림 표현 */
+            background: rgba(0, 0, 0, 0.3); 
+            border-radius: 12px 0 0 12px; /* 앞쪽만 둥글게 */
+            position: relative; 
+            box-shadow: inset 10px 0 20px rgba(0,0,0,0.5); 
+        }
+        .truck-grid-lines { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); 
+            background-size: 100px 100px; /* 3열 기준 */
+            pointer-events: none; 
+        }
+        .truck-label-deep { position: absolute; bottom: -25px; left: 10px; font-size: 0.8rem; color: #64748b; }
+        .truck-label-door { position: absolute; bottom: -25px; right: 10px; font-size: 0.8rem; color: #3b82f6; font-weight: bold; }
+
+        .item-box { width: 90px; height: 90px; position: absolute; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 0.9rem; font-weight: bold; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.4), inset 0 0 10px rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); transition: all 0.7s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 100; }
+        .item-box i { font-size: 1.4rem; margin-bottom: 4px; }
+        .badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.6); margin-top: 4px; letter-spacing: -0.5px; }
+        .theme-A { background: linear-gradient(135deg, #ef4444, #991b1b); } /* Red: First Delivery (Last Load) */
+        .theme-B { background: linear-gradient(135deg, #3b82f6, #1e40af); } /* Blue: Mid */
+        .theme-C { background: linear-gradient(135deg, #10b981, #065f46); } /* Green: Last Delivery (First Load) */
+        
+        .controls { margin-top: 30px; display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 200; }
+        .status-msg { font-size: 1.6rem; font-weight: 800; background: linear-gradient(90deg, #60a5fa, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; min-height: 40px; text-shadow: 0 0 30px rgba(96, 165, 250, 0.3); letter-spacing: -0.5px; }
+        .btn-group { display: flex; gap: 20px; }
+        button { padding: 14px 32px; border-radius: 50px; border: none; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: 'Pretendard', sans-serif; }
+        .btn-next { background: #2563eb; color: white; box-shadow: 0 0 20px rgba(37, 99, 235, 0.5); }
+        .btn-next:hover { transform: translateY(-2px); background: #1d4ed8; }
+        .btn-next:disabled { background: #475569; cursor: not-allowed; box-shadow: none; }
+        .btn-reset { background: transparent; border: 2px solid #475569; color: #94a3b8; }
+        .btn-reset:hover { border-color: #cbd5e1; color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="stage" id="stage">
+        <div class="zone" id="zone-input">
+            <div class="zone-header">입력 데이터 (무작위) <i class="fa-solid fa-shuffle"></i></div>
+        </div>
+        <div class="zone" id="zone-logic">
+            <div class="zone-header">핵심 최적화 로직</div>
+            <div class="step-card" id="step-0"><strong>1단계: 권역 분류</strong>배송지(A, B, C) 그룹핑</div>
+            <div class="step-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+            <div class="step-card" id="step-1"><strong>2단계: 물리 제약 검증</strong>중량물 하단 / 파손주의 상단</div>
+            <div class="step-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+            <div class="step-card" id="step-2"><strong>3단계: LIFO 시퀀싱</strong>C(안쪽) → B → A(문쪽)</div>
+            <div class="step-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+            <div class="step-card" id="step-3"><strong>4단계: 3D 적재 (측면도)</strong>Side View Simulation</div>
+        </div>
+        <div class="zone" id="zone-output">
+            <div class="zone-header">최적화 적재 완료 <i class="fa-solid fa-truck-fast"></i></div>
+            <div class="truck-frame" id="truck-target">
+                <div class="truck-grid-lines"></div>
+                <div class="truck-label-deep">◀ 안쪽 (C:마지막 배송)</div>
+                <div class="truck-label-door">문쪽 (A:첫 배송) ▶</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="status-msg" id="status-display">최적화 준비 완료</div>
+        <div class="btn-group">
+            <button class="btn-reset" onclick="resetSim()">초기화</button>
+            <button class="btn-next" id="btn-next" onclick="nextStep()">최적화 시작 <i class="fa-solid fa-chevron-right" style="margin-left:8px;"></i></button>
+        </div>
+    </div>
+
+    <script>
+        // Data: C(Deep), B(Mid), A(Door)
+        // Groups: C needs to be loaded first (Left), A loaded last (Right)
+        const rawData = [
+            { id: 1, group: 'A', type: 'normal', weight: 1, icon: 'fa-box', label: 'A-1' },
+            { id: 2, group: 'B', type: 'heavy', weight: 2, icon: 'fa-weight-hanging', label: 'B-중량' },
+            { id: 3, group: 'A', type: 'fragile', weight: 0, icon: 'fa-wine-glass', label: 'A-파손' },
+            { id: 4, group: 'C', type: 'normal', weight: 1, icon: 'fa-box', label: 'C-1' },
+            { id: 5, group: 'A', type: 'heavy', weight: 2, icon: 'fa-weight-hanging', label: 'A-중량' },
+            { id: 6, group: 'B', type: 'normal', weight: 1, icon: 'fa-box', label: 'B-1' },
+            { id: 7, group: 'C', type: 'fragile', weight: 0, icon: 'fa-wine-glass', label: 'C-파손' },
+            { id: 8, group: 'B', type: 'normal', weight: 1, icon: 'fa-box', label: 'B-2' }
+        ];
+
+        let boxes = [];
+        let currentStep = -1;
+        const stage = document.getElementById('stage');
+        const inputZone = document.getElementById('zone-input');
+        const truckTarget = document.getElementById('truck-target');
+        const statusDisplay = document.getElementById('status-display');
+        const btnNext = document.getElementById('btn-next');
+
+        function getPos(element) {
+            const rect = element.getBoundingClientRect();
+            const stageRect = stage.getBoundingClientRect();
+            return { x: rect.left - stageRect.left, y: rect.top - stageRect.top, width: rect.width, height: rect.height };
+        }
+
+        function moveBoxTo(boxEl, x, y, scale = 1) {
+            boxEl.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+        }
+
+        function highlightStep(stepIndex) {
+            document.querySelectorAll('.step-card').forEach((el, i) => {
+                if (i === stepIndex) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+        }
+
+        function init() {
+            document.querySelectorAll('.item-box').forEach(e => e.remove());
+            boxes = [];
+            currentStep = -1;
+            statusDisplay.innerText = "최적화 준비 완료";
+            btnNext.innerText = "최적화 시작";
+            btnNext.disabled = false;
+            highlightStep(-1);
+
+            const zoneRect = getPos(inputZone);
+            rawData.forEach((data, i) => {
+                const box = document.createElement('div');
+                box.className = `item-box theme-${data.group}`;
+                let badgeHtml = '';
+                if(data.type === 'fragile') badgeHtml = `<div class="badge">파손주의</div>`;
+                if(data.type === 'heavy') badgeHtml = `<div class="badge">고중량</div>`;
+                box.innerHTML = `<i class="fa-solid ${data.icon}"></i> ${data.label} ${badgeHtml}`;
+                const randX = Math.random() * (zoneRect.width - 100);
+                const randY = Math.random() * (zoneRect.height - 100) + 40; 
+                box.style.left = '0px'; box.style.top = '0px';
+                moveBoxTo(box, zoneRect.x + randX, zoneRect.y + randY);
+                stage.appendChild(box);
+                boxes.push({ el: box, data: data });
+            });
+        }
+
+        function nextStep() {
+            currentStep++;
+
+            if (currentStep === 0) { // Grouping
+                statusDisplay.innerText = "1단계: 배송 권역별(A, B, C) 분류";
+                btnNext.innerText = "다음: 제약 조건 검증";
+                highlightStep(0);
+                const zoneRect = getPos(inputZone);
+                const colWidth = zoneRect.width / 3;
+                boxes.forEach(item => {
+                    let targetX = zoneRect.x + 20;
+                    if (item.data.group === 'B') targetX += colWidth;
+                    if (item.data.group === 'A') targetX += colWidth * 2; // A is last (Door side)
+                    const targetY = zoneRect.y + 60 + (Math.random() * (zoneRect.height - 150));
+                    moveBoxTo(item.el, targetX, targetY);
+                });
+            }
+            else if (currentStep === 1) { // Physics
+                statusDisplay.innerText = "2단계: 물리 제약 (중량↓ / 파손주의↑)";
+                btnNext.innerText = "다음: LIFO 시퀀싱";
+                highlightStep(1);
+                const zoneRect = getPos(inputZone);
+                boxes.forEach(item => {
+                    const currentRect = getPos(item.el);
+                    let targetY = currentRect.y;
+                    if (item.data.weight === 2) { targetY = zoneRect.y + zoneRect.height - 100; item.el.style.zIndex = 10; } 
+                    else if (item.data.weight === 0) { targetY = zoneRect.y + 60; item.el.style.zIndex = 200; item.el.style.boxShadow = "0 0 20px #fff"; }
+                    moveBoxTo(item.el, currentRect.x, targetY);
+                });
+            }
+            else if (currentStep === 2) { // LIFO Sort
+                statusDisplay.innerText = "3단계: C(안쪽) → B → A(문쪽) 정렬";
+                btnNext.innerText = "다음: 적재 시뮬레이션";
+                highlightStep(2);
+                const zoneRect = getPos(inputZone);
+                
+                // Sort Logic: Group C -> B -> A (Load Order), then Heavy -> Normal -> Fragile (Vertical Order)
+                // C (Last delivery) loads FIRST (Left). A (First delivery) loads LAST (Right).
+                const groupOrder = { 'C': 0, 'B': 1, 'A': 2 };
+                
+                const sorted = boxes.sort((a, b) => {
+                    if (a.data.group !== b.data.group) return groupOrder[a.data.group] - groupOrder[b.data.group];
+                    // Within group: Heavy first (bottom), then normal, then fragile
+                    if (b.data.weight !== a.data.weight) return b.data.weight - a.data.weight;
+                    return 0;
+                });
+
+                const startX = zoneRect.x + 20;
+                const startY = zoneRect.y + (zoneRect.height / 2) - 40;
+                sorted.forEach((item, i) => {
+                    item.el.style.zIndex = i;
+                    item.el.style.boxShadow = ""; 
+                    moveBoxTo(item.el, startX + (i * 30), startY); 
+                });
+            }
+            else if (currentStep === 3) { // Side View Packing
+                statusDisplay.innerText = "4단계: 측면 적재 (LIFO & 물리 제약 준수)";
+                btnNext.innerText = "완료";
+                highlightStep(3);
+
+                const truckRect = getPos(truckTarget);
+                const boxSize = 95; // Grid size
+                
+                // Side View Grid: 3 Cols (C, B, A) x 3 Rows
+                // Col 0 (Left): Group C
+                // Col 1 (Mid): Group B
+                // Col 2 (Right): Group A
+                const colMap = { 'C': 0, 'B': 1, 'A': 2 };
+                // Track height per column
+                let colHeight = [0, 0, 0]; 
+                
+                // Re-sort to ensure heavy goes in first within group
+                boxes.sort((a, b) => {
+                     if (a.data.group !== b.data.group) return colMap[a.data.group] - colMap[b.data.group];
+                     return b.data.weight - a.data.weight; // Heavy(2) -> Normal(1) -> Fragile(0)
+                });
+
+                boxes.forEach((item, i) => {
+                    setTimeout(() => {
+                        const colIdx = colMap[item.data.group];
+                        let rowIdx = colHeight[colIdx];
+                        
+                        // Force Fragile to top if possible?
+                        // Simple stack logic is enough because we sorted Heavy -> Fragile
+                        // Heavy will take Row 0, Fragile will take Row 2 naturally.
+                        
+                        colHeight[colIdx]++; // Increment stack height
+
+                        const destX = truckRect.x + 15 + (colIdx * 100);
+                        const destY = (truckRect.y + truckRect.height) - 15 - 90 - (rowIdx * 100); // 90 is box height approx
+
+                        moveBoxTo(item.el, destX, destY);
+                    }, i * 300); 
+                });
+            }
+            else {
+                statusDisplay.innerText = "최적화 완료! (LIFO & 안전 적재 성공)";
+                btnNext.innerText = "종료";
+                btnNext.disabled = true;
+                highlightStep(-1);
+            }
+        }
+
+        function resetSim() { init(); }
+        window.onload = init;
+    </script>
+</body>
+</html>
