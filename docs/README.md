@@ -9,7 +9,7 @@ GitHub Pages 배포 링크:
 
   
 - [웹 시스템 설계 프로젝트 화면 설계](https://eunhoss1.github.io/yju-capstone-2025/Logi-OptimusProjectLO_v2.html)
-- [중소물류센터 흐름]((https://eunhoss1.github.io/yju-capstone-2025/Mid-Sized_Center.html)
+- [중소물류센터 흐름](https://eunhoss1.github.io/yju-capstone-2025/Mid-Sized_Centers.html)
 
 
 
