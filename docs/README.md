@@ -11,6 +11,7 @@ GitHub Pages 배포 링크:
 - [웹 시스템 설계 프로젝트 화면 설계](https://eunhoss1.github.io/yju-capstone-2025/Logi-OptimusProjectLO_v2.html)
 - [중소기업물류센터흐름](https://eunhoss1.github.io/yju-capstone-2025/MidCenter.html)
 - [핵심알고리즘 로직 흐름](https://eunhoss1.github.io/yju-capstone-2025/flow.html)
+- [로봇](https://eunhoss1.github.io/yju-capstone-2025/robot.html)
 
 
 
